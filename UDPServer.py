@@ -3,11 +3,12 @@ import sys
 
 users = []
 contactList = []
+query = []
 
 def realUser(name):
     inList = 0
     for i in range(0, len(users)):
-        if users[i] == name:
+        if users[i][0] == name:
             inList = 1
             break
     return inList
@@ -29,6 +30,14 @@ def getCommand(cmd, index):
         index = index + 1
     index = index + 1
     return finalCmd, index
+
+def inQuery(list, name):
+    exist = 0
+    for i in range(0, len(list)):
+        if list[i][0] == name:
+            exist = 1
+            break
+    return exist
 
 if len(sys.argv) != 2:
     print("FAILURE")
@@ -68,21 +77,40 @@ while True:
             print("FAILURE")
         else:
             contactList.append(command2)
+            newQuery = [command2, []]
+            query.append(newQuery)
 
     elif command1 == "query-lists" and spaces == 0:
-        numOfLists = 0
-        for i in range(0, len(contactList)):
-            numOfLists + numOfLists + 1
-
-        if numOfLists == 0:
-            print(numOfLists)
+        if len(query) == 0:
+            print(0)
         else:
-            print(numOfLists)
-            for i in range(0, len(contactList)):
-                print(contactList[i])
+            print(len(query))
+            for i in range(0, len(query)):
+                print(query[i][0] + ":")
+                for j in range(0, len(query[i][1])):
+                    print(query[i][1][j])
 
     elif command1 == "join" and spaces == 2:
-        print("d")
+        command2, index = getCommand(decodedMessage, index)
+        command3, index = getCommand(decodedMessage, index)
+
+        if realUser(command3) == 0 or realContactList(command2) == 0:
+            print("FAILURE")
+        else:
+            for i in range(0, len(query)):
+                if query[i][0] == command2:
+                    if inQuery(query[i][1], command3) == 1:
+                        print("FAILURE")
+                        break
+                    else:
+                        for j in range(0, len(users)):
+                            if users[j][0] == command3:
+                                newQueryMember = []
+                                newQueryMember.append(users[j][0])
+                                newQueryMember.append(users[j][1])
+                                newQueryMember.append(users[j][2])
+                                query[i][1].append(newQueryMember)
+                            
     elif command1 == "leave" and spaces == 2:
         print("e")
     elif command1 == "exit" and spaces == 1:
