@@ -13,4 +13,5 @@ for i in range(0, 50):
     clientSocket.sendto(message.encode(), (serverName, serverPort))
     modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
     message = modifiedMessage.decode()
+    print(message)
 clientSocket.close()

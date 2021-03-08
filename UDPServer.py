@@ -46,10 +46,13 @@ if len(sys.argv) != 2:
 serverPort = int(sys.argv[1])
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('', serverPort))
-print("The server is ready to receive")
+print("The server is ready to receive!")
 while True:
     message, clientAddress = serverSocket.recvfrom(2048)
     decodedMessage = message.decode()
+    sentMsg = ""
+
+    print("The server received: " + decodedMessage)
 
     spaces = 0
     for i in range(0, len(decodedMessage)):
@@ -63,44 +66,50 @@ while True:
         command2, index = getCommand(decodedMessage, index)
 
         if realUser(command2) == 1:
-            print("FAILURE")
+            sentMsg = "FAILURE"
         else:
             command3, index = getCommand(decodedMessage, index)
             command4, index = getCommand(decodedMessage, index)
 
             newUser = [command2, command3, command4]
             users.append(newUser)
+            sentMsg = "SUCCESS"
 
     elif command1 == "create" and spaces == 1:
         command2, index = getCommand(decodedMessage, index)
         if realContactList(command2) == 1:
-            print("FAILURE")
+            sentMsg = "FAILURE"
         else:
             contactList.append(command2)
             newQuery = [command2, []]
             query.append(newQuery)
+            sentMsg = "SUCCESS"
 
     elif command1 == "query-lists" and spaces == 0:
         if len(query) == 0:
-            print(0)
+            sentMsg = "Number of Contact Lists: 0"
         else:
-            print(len(query))
+            sentMsg = "Number of Contact Lists: " + str(len(query)) + "\n\n"
             for i in range(0, len(query)):
-                print(query[i][0] + ":")
+                sentMsg = sentMsg + query[i][0] + ":\n"
                 for j in range(0, len(query[i][1])):
-                    print(query[i][1][j])
+                    sentMsg = sentMsg + "\t" + query[i][1][j][0]
+                    sentMsg = sentMsg + "\t" + query[i][1][j][1]
+                    sentMsg = sentMsg + "\t" + query[i][1][j][2]
+                    sentMsg = sentMsg + "\n"
+                sentMsg = sentMsg + "\n"
 
     elif command1 == "join" and spaces == 2:
         command2, index = getCommand(decodedMessage, index)
         command3, index = getCommand(decodedMessage, index)
 
         if realUser(command3) == 0 or realContactList(command2) == 0:
-            print("FAILURE")
+            sentMsg = "FAILURE"
         else:
             for i in range(0, len(query)):
                 if query[i][0] == command2:
                     if inQuery(query[i][1], command3) == 1:
-                        print("FAILURE")
+                        sentMsg = "FAILURE"
                         break
                     else:
                         for j in range(0, len(users)):
@@ -110,9 +119,27 @@ while True:
                                 newQueryMember.append(users[j][1])
                                 newQueryMember.append(users[j][2])
                                 query[i][1].append(newQueryMember)
+                                sentMsg = "SUCCESS"
+                                break
                             
     elif command1 == "leave" and spaces == 2:
-        print("e")
+        command2, index = getCommand(decodedMessage, index)
+        command3, index = getCommand(decodedMessage, index)
+
+        if realUser(command3) == 0 or realContactList(command2) == 0:
+            sentMsg = "FAILURE"
+        else:
+            for i in range(0, len(query)):
+                if query[i][0] == command2:
+                    if inQuery(query[i][1], command3) == 1:
+                        for j in range(0, len(query[i][1])):
+                            if query[i][1][j][0] == command3:
+                                query[i][1].remove(query[i][1][j])
+                                sentMsg = "SUCCESS"
+                                break
+                    else:
+                        sentMsg = "FAILURE"
+
     elif command1 == "exit" and spaces == 1:
         print("f")
     elif command1 == "im-start" and spaces == 2:
@@ -122,7 +149,6 @@ while True:
     elif command1 == "save" and spaces == 1:
         print("i")
     else:
-        print("FAILURE")
+        sentMsg = "FAILURE"
 
-    print(decodedMessage)
-    serverSocket.sendto(decodedMessage.encode(), clientAddress)
+    serverSocket.sendto(sentMsg.encode(), clientAddress)
