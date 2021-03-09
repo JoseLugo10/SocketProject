@@ -147,7 +147,26 @@ while True:
     elif command1 == "im-complete" and spaces == 2:
         print("h")
     elif command1 == "save" and spaces == 1:
-        print("i")
+        command2, index = getCommand(decodedMessage, index)
+
+        textFile = open(command2 + ".txt", "w")
+        textFile.write("The Number of Active Users: " + str(len(users)) + "\n")
+        for i in range(0, len(users)):
+            textFile.write("\t" + users[i][0])
+            textFile.write("\t" + users[i][1])
+            textFile.write("\t" + users[i][2] + "\n")
+
+        textFile.write("\nThe Number of Contact Lists: " + str(len(query)) + "\n")
+        for i in range(0, len(query)):
+            textFile.write(query[i][0] + ": " + str(len(query[i][1])) + " members\n")
+            for j in range(0, len(query[i][1])):
+                textFile.write("\t" + query[i][1][j][0])
+                textFile.write("\t" + query[i][1][j][1])
+                textFile.write("\t" + query[i][1][j][2] + "\n")
+            textFile.write("\n")
+
+        textFile.close()
+        sentMsg = "SUCCESS"
     else:
         sentMsg = "FAILURE"
 
