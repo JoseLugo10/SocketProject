@@ -171,7 +171,27 @@ while True:
                             sentMsg = "FAILURE: " + command3 + " is not in the " + command2 + " contact list"
 
     elif command1 == "exit" and spaces == 1:
-        print("f")
+        command2, index = getCommand(decodedMessage)
+
+        if realUser(command2) == 0:
+            sentMsg = "FAILURE: " + command2 + " is not an active user"
+        else:
+            if hasAbilities(command2) == 1:
+                sentMsg = "FAILURE: You are currently part of an ongoing IM"
+            else:
+                for i in range(0, len(query)):
+                    for j in range(0, len(query[i][1])):
+                        if query[i][1][j][0] == command2:
+                            query[i][1].remove(query[i][1][j])
+                            break
+
+                for i in range(0, len(users)):
+                    if users[i][0] == command2:
+                        users.remove(users[i])
+                        break
+
+                sentMsg = "SUCCESS: " + command2 + " has left the application"
+                
     elif command1 == "im-start" and spaces == 2:
         command2, index = getCommand(decodedMessage, index)
         command3, index = getCommand(decodedMessage, index)
