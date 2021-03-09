@@ -40,7 +40,7 @@ def inQuery(list, name):
     return exist
 
 if len(sys.argv) != 2:
-    print("FAILURE")
+    print("FAILURE: Incorrect amount of inputs")
     sys.exit()
 
 serverPort = int(sys.argv[1])
@@ -66,24 +66,24 @@ while True:
         command2, index = getCommand(decodedMessage, index)
 
         if realUser(command2) == 1:
-            sentMsg = "FAILURE"
+            sentMsg = "FAILURE: This user is already registered"
         else:
             command3, index = getCommand(decodedMessage, index)
             command4, index = getCommand(decodedMessage, index)
 
             newUser = [command2, command3, command4]
             users.append(newUser)
-            sentMsg = "SUCCESS"
+            sentMsg = "SUCCESS: " + command2 + " has been registered"
 
     elif command1 == "create" and spaces == 1:
         command2, index = getCommand(decodedMessage, index)
         if realContactList(command2) == 1:
-            sentMsg = "FAILURE"
+            sentMsg = "FAILURE: Contact list already exists"
         else:
             contactList.append(command2)
             newQuery = [command2, []]
             query.append(newQuery)
-            sentMsg = "SUCCESS"
+            sentMsg = "SUCCESS: Contact list " + command2 + " has been created"
 
     elif command1 == "query-lists" and spaces == 0:
         if len(query) == 0:
@@ -103,13 +103,15 @@ while True:
         command2, index = getCommand(decodedMessage, index)
         command3, index = getCommand(decodedMessage, index)
 
-        if realUser(command3) == 0 or realContactList(command2) == 0:
-            sentMsg = "FAILURE"
+        if realUser(command3) == 0:
+            sentMsg = "FAILURE: User does not exist"
+        elif realContactList(command2) == 0:
+            sentMsg = "FAILURE: Contact list does not exist"
         else:
             for i in range(0, len(query)):
                 if query[i][0] == command2:
                     if inQuery(query[i][1], command3) == 1:
-                        sentMsg = "FAILURE"
+                        sentMsg = "FAILURE: " + command3 + " is already in contact list " + command2
                         break
                     else:
                         for j in range(0, len(users)):
@@ -119,15 +121,17 @@ while True:
                                 newQueryMember.append(users[j][1])
                                 newQueryMember.append(users[j][2])
                                 query[i][1].append(newQueryMember)
-                                sentMsg = "SUCCESS"
+                                sentMsg = "SUCCESS: " + command3 + " has joined the " + command2 + " contact list"
                                 break
                             
     elif command1 == "leave" and spaces == 2:
         command2, index = getCommand(decodedMessage, index)
         command3, index = getCommand(decodedMessage, index)
 
-        if realUser(command3) == 0 or realContactList(command2) == 0:
-            sentMsg = "FAILURE"
+        if realUser(command3) == 0:
+            sentMsg = "FAILURE: User does not exist"
+        elif realContactList(command2) == 0:
+            sentMsg = "FAILURE: Contact list does not exist"
         else:
             for i in range(0, len(query)):
                 if query[i][0] == command2:
@@ -135,15 +139,46 @@ while True:
                         for j in range(0, len(query[i][1])):
                             if query[i][1][j][0] == command3:
                                 query[i][1].remove(query[i][1][j])
-                                sentMsg = "SUCCESS"
+                                sentMsg = "SUCCESS: " + command3 + " has been removed from the " + command2 + " contact list"
                                 break
                     else:
-                        sentMsg = "FAILURE"
+                        sentMsg = "FAILURE: " + command3 + " is not in the " + command2 + " contact list"
 
     elif command1 == "exit" and spaces == 1:
         print("f")
     elif command1 == "im-start" and spaces == 2:
-        print("g")
+        command2, index = getCommand(decodedMessage, index)
+        command3, index = getCommand(decodedMessage, index)
+
+        if realContactList(command2) == 0:
+            sentMsg = "FAILURE: Contact list does not exit"
+        elif realUser(command3) == 0:
+            sentMsg = "FAILURE: User does not exist"
+        else:
+            for i in range(0, len(query)):
+                if query[i][0] == command2:
+                    if inQuery(query[i][1], command3) == 0:
+                        sentMsg = "FAILURE: User does not exist in contact list " + command2
+                        break
+                    else:
+                        sentMsg = "SUCCESS:\n"
+                        sentMsg = sentMsg + "Number of contacts in " + query[i][0] + ": " + str(len(query[i][1])) + "\n"
+
+                        for j in range(0, len(query[i][1])):
+                            if query[i][1][j][0] == command3:
+                                sentMsg = sentMsg + "\t" + query[i][1][j][0]
+                                sentMsg = sentMsg + "\t" + query[i][1][j][1]
+                                sentMsg = sentMsg + "\t" + query[i][1][j][2] + "\n"
+                                break
+
+                        for j in range(0, len(query[i][1])):
+                            if query[i][1][j][0] != command3:
+                                sentMsg = sentMsg + "\t" + query[i][1][j][0]
+                                sentMsg = sentMsg + "\t" + query[i][1][j][1]
+                                sentMsg = sentMsg + "\t" + query[i][1][j][2] + "\n"
+
+                        break
+
     elif command1 == "im-complete" and spaces == 2:
         print("h")
     elif command1 == "save" and spaces == 1:
@@ -166,8 +201,8 @@ while True:
             textFile.write("\n")
 
         textFile.close()
-        sentMsg = "SUCCESS"
+        sentMsg = "SUCCESS: " + command2 + ".txt has been saved"
     else:
-        sentMsg = "FAILURE"
+        sentMsg = "FAILURE: Invalid command"
 
     serverSocket.sendto(sentMsg.encode(), clientAddress)
