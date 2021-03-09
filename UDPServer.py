@@ -4,6 +4,7 @@ import sys
 users = []
 contactList = []
 query = []
+initiatedIM = []
 
 def realUser(name):
     inList = 0
@@ -39,6 +40,25 @@ def inQuery(list, name):
             break
     return exist
 
+def hasAbilities(name):
+    ability = 0
+    for i in range(0, len(users)):
+        if users[i][0] == name:
+            if users[i][3] == 1:
+                ability = 1
+                break
+            else:
+                break
+    return ability
+
+def startedIM(list, name):
+    started = 0
+    for i in range(0, len(initiatedIM)):
+        if initiatedIM[i][0] == list and initiatedIM[i][1] == name:
+            started = 1
+            break
+    return started
+
 if len(sys.argv) != 2:
     print("FAILURE: Incorrect amount of inputs")
     sys.exit()
@@ -71,7 +91,7 @@ while True:
             command3, index = getCommand(decodedMessage, index)
             command4, index = getCommand(decodedMessage, index)
 
-            newUser = [command2, command3, command4]
+            newUser = [command2, command3, command4, 0]
             users.append(newUser)
             sentMsg = "SUCCESS: " + command2 + " has been registered"
 
@@ -108,21 +128,24 @@ while True:
         elif realContactList(command2) == 0:
             sentMsg = "FAILURE: Contact list does not exist"
         else:
-            for i in range(0, len(query)):
-                if query[i][0] == command2:
-                    if inQuery(query[i][1], command3) == 1:
-                        sentMsg = "FAILURE: " + command3 + " is already in contact list " + command2
-                        break
-                    else:
-                        for j in range(0, len(users)):
-                            if users[j][0] == command3:
-                                newQueryMember = []
-                                newQueryMember.append(users[j][0])
-                                newQueryMember.append(users[j][1])
-                                newQueryMember.append(users[j][2])
-                                query[i][1].append(newQueryMember)
-                                sentMsg = "SUCCESS: " + command3 + " has joined the " + command2 + " contact list"
-                                break
+            if hasAbilities(command3) == 1:
+                sentMsg = "FAILURE: You are currently part of an ongoing IM"
+            else:
+                for i in range(0, len(query)):
+                    if query[i][0] == command2:
+                        if inQuery(query[i][1], command3) == 1:
+                            sentMsg = "FAILURE: " + command3 + " is already in contact list " + command2
+                            break
+                        else:
+                            for j in range(0, len(users)):
+                                if users[j][0] == command3:
+                                    newQueryMember = []
+                                    newQueryMember.append(users[j][0])
+                                    newQueryMember.append(users[j][1])
+                                    newQueryMember.append(users[j][2])
+                                    query[i][1].append(newQueryMember)
+                                    sentMsg = "SUCCESS: " + command3 + " has joined the " + command2 + " contact list"
+                                    break
                             
     elif command1 == "leave" and spaces == 2:
         command2, index = getCommand(decodedMessage, index)
@@ -133,16 +156,19 @@ while True:
         elif realContactList(command2) == 0:
             sentMsg = "FAILURE: Contact list does not exist"
         else:
-            for i in range(0, len(query)):
-                if query[i][0] == command2:
-                    if inQuery(query[i][1], command3) == 1:
-                        for j in range(0, len(query[i][1])):
-                            if query[i][1][j][0] == command3:
-                                query[i][1].remove(query[i][1][j])
-                                sentMsg = "SUCCESS: " + command3 + " has been removed from the " + command2 + " contact list"
-                                break
-                    else:
-                        sentMsg = "FAILURE: " + command3 + " is not in the " + command2 + " contact list"
+            if hasAbilities(command3) == 1:
+                sentMsg = "FAILURE: You are currently part of an ongoing IM"
+            else:
+                for i in range(0, len(query)):
+                    if query[i][0] == command2:
+                        if inQuery(query[i][1], command3) == 1:
+                            for j in range(0, len(query[i][1])):
+                                if query[i][1][j][0] == command3:
+                                    query[i][1].remove(query[i][1][j])
+                                    sentMsg = "SUCCESS: " + command3 + " has been removed from the " + command2 + " contact list"
+                                    break
+                        else:
+                            sentMsg = "FAILURE: " + command3 + " is not in the " + command2 + " contact list"
 
     elif command1 == "exit" and spaces == 1:
         print("f")
@@ -177,10 +203,33 @@ while True:
                                 sentMsg = sentMsg + "\t" + query[i][1][j][1]
                                 sentMsg = sentMsg + "\t" + query[i][1][j][2] + "\n"
 
+                        for j in range(0, len(query[i][1])):
+                            for k in range(0, len(users)):
+                                if query[i][1][j][0] == users[k][0]:
+                                    users[k][3] = 1
+                                    break
+
+                        imStarter = [command2, command3]
+                        initiatedIM.append(imStarter)
                         break
 
     elif command1 == "im-complete" and spaces == 2:
-        print("h")
+        command2, index = getCommand(decodedMessage, index)
+        command3, index = getCommand(decodedMessage, index)
+
+        if startedIM(command2, command3) == 0:
+            sentMsg = "FAILURE: You did not initiate an IM for this particular contact list"
+        else:
+            for i in range(0, len(query)):
+                if query[i][0] == command2:
+                    for j in range(0, len(query[i][1])):
+                        for k in range(0, len(users)):
+                            if query[i][1][j][0] == users[k][0]:
+                                users[k][3] = 0
+                                break
+                    break
+            sentMsg = "SUCCESS: IM has been completed"
+
     elif command1 == "save" and spaces == 1:
         command2, index = getCommand(decodedMessage, index)
 
