@@ -2,6 +2,7 @@ from socket import *
 import sys
 import multiprocessing
 
+
 def getCommand(cmd):
     finalCmd = ""
     for i in range(0, len(cmd)):
@@ -9,6 +10,7 @@ def getCommand(cmd):
             break
         finalCmd = finalCmd + cmd[i]
     return finalCmd
+
 
 def getCommandWIndex(cmd, index):
     finalCmd = ""
@@ -20,15 +22,17 @@ def getCommandWIndex(cmd, index):
     index = index + 1
     return finalCmd, index
 
+
 def getCommandTab(cmd, index):
     finalCmd = ""
     for i in range(index, len(cmd)):
-        if cmd[i] == '\t':
+        if cmd[i] == '\t' or cmd[i] == '\n':
             break
         finalCmd = finalCmd + cmd[i]
         index = index + 1
     index = index + 1
     return finalCmd, index
+
 
 def getResult(result):
     num = 0
@@ -42,6 +46,7 @@ def getResult(result):
         num = 1
     return num
 
+
 def p2pApp(clientPortNum):
     clientClientSocket.bind(('', clientPortNum))
 
@@ -51,11 +56,52 @@ def p2pApp(clientPortNum):
         receivedMsg = ""
 
         for i in range(0, len(decodedMsg)):
-            if decodedMsg[i] == "\n":
+            if decodedMsg[i] == '\n':
                 break
             receivedMsg = receivedMsg + decodedMsg[i]
 
         print(receivedMsg)
+
+        br = 0
+        for i in range(0, len(decodedMsg)):
+            if decodedMsg[i] == '\n':
+                br = br + 1
+
+            if br == 2:
+                ind = i + 1
+                for j in range(0, 6):
+                    comm, ind = getCommandWIndex(decodedMsg, ind)
+                comm = int(comm)
+                break
+
+        br = 0
+        for i in range(0, len(decodedMsg)):
+            if decodedMsg[i] == '\n':
+                br = br + 1
+
+            if br == (3 + comm):
+                listIndex = int(decodedMsg[i + 1])
+
+        userIndex = comm - listIndex
+
+        if userIndex == 1:
+            br = 0
+            for i in range(0, len(decodedMsg)):
+                if decodedMsg[i] == '\n':
+                    br = br + 1
+
+                if br == 3:
+                    sendIndex = i + 2
+                    finalName, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                    finalIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                    finalPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                    finalPort = int(finalPort)
+                    break
+
+            clientClientSocket.sendto(decodedMsg.encode(), (finalIp, finalPort))
+        else:
+            print("a")
+
 
 
 
@@ -73,8 +119,6 @@ clientPort = ""
 clientPortNum = 0
 clientClientSocket = socket(AF_INET, SOCK_DGRAM)
 registered = 0
-
-receivedBack = 0
 
 while True:
     message = input()
@@ -94,7 +138,7 @@ while True:
         else:
             print(message)
             messageIM = input('Message to send to contact list: ')
-            messageIM = messageIM + message
+            messageIM = messageIM + "\n" + message
 
             lineBreaks = 0
             num = ""
@@ -102,7 +146,7 @@ while True:
                 if message[i] == '\n':
                     lineBreaks = lineBreaks + 1
 
-                if lineBreaks == 1:
+                if lineBreaks == 1 and num == "":
                     for j in range(0, 6):
                         num, i = getCommandWIndex(message, i)
                     num = int(num)
@@ -128,8 +172,12 @@ while True:
                     receivingPort = int(receivingPort)
                     break
 
+            num = num - (num - 1)
+            messageIM = messageIM + str(num)
+
             clientClientSocket.sendto(messageIM.encode(), (sendingIp, sendingPort))
             receivedMessage, clientAddr = clientClientSocket.recvfrom(2048)
+            print(receivedMessage)
 
             if clientAddr == receivingIp:
                 completeMsg = "im-complete " + command2 + " " + command3
