@@ -1,7 +1,6 @@
 from socket import *
 import sys
 import multiprocessing
-import time
 
 def getCommand(cmd):
     finalCmd = ""
@@ -43,7 +42,7 @@ def getResult(result):
         num = 1
     return num
 
-def p2pApp():
+def p2pApp(clientPortNum):
     clientClientSocket.bind(('', clientPortNum))
 
     while True:
@@ -154,6 +153,10 @@ while True:
             clientAddress, index = getCommandWIndex(message, index)
             clientPort, index = getCommandWIndex(message, index)
             clientPortNum = int(clientPort)
+
+            p1 = multiprocessing.Process(target=p2pApp, args=(clientPortNum,))
+            p1.start()
+
     elif getCommand(message) == "exit":
         clientServerSocket.sendto(message.encode(), (serverName, serverPort))
         modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
@@ -161,6 +164,7 @@ while True:
 
         if getResult(message) == 1:
             print(message)
+            p1.terminate()
             break
         else:
             print(message)
