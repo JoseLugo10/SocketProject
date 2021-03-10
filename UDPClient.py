@@ -55,67 +55,91 @@ def p2pApp(clientPortNum, clientClientSocket):
         decodedMsg = msg.decode()
         receivedMsg = ""
 
-        for i in range(0, len(decodedMsg)):
-            if decodedMsg[i] == '\n':
-                break
-            receivedMsg = receivedMsg + decodedMsg[i]
-
-        print(receivedMsg)
-
         br = 0
         for i in range(0, len(decodedMsg)):
             if decodedMsg[i] == '\n':
                 br = br + 1
 
-            if br == 2:
-                ind = i + 1
-                for j in range(0, 6):
-                    comm, ind = getCommandWIndex(decodedMsg, ind)
-                comm = int(comm)
+        for i in range(0, len(decodedMsg)):
+            if decodedMsg[i] == '\n':
                 break
+            receivedMsg = receivedMsg + decodedMsg[i]
 
-        listIndex = int(decodedMsg[len(decodedMsg) - 1])
+        receivedMsg = receivedMsg + '\n'
 
-        userIndex = comm - listIndex
-
-        finalSentMsg = ""
-        for i in range(0, (len(decodedMsg) - 1)):
-            finalSentMsg = finalSentMsg + decodedMsg[i]
-
-        finalSentMsg = finalSentMsg + str(userIndex)
-
-        if userIndex == 1:
+        if br > 1:
             br = 0
             for i in range(0, len(decodedMsg)):
                 if decodedMsg[i] == '\n':
                     br = br + 1
 
-                if br == 3:
-                    sendIndex = i + 2
-                    finalName, sendIndex = getCommandTab(decodedMsg, sendIndex)
-                    finalIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
-                    finalPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
-                    finalPort = int(finalPort)
+                if br == 2:
+                    ind = i + 1
+                    for j in range(0, 6):
+                        comm, ind = getCommandWIndex(decodedMsg, ind)
+                    comm = int(comm)
                     break
 
-            clientClientSocket.sendto(finalSentMsg.encode(), (finalIp, finalPort))
+            listIndex = int(decodedMsg[len(decodedMsg) - 1])
+
+            userIndex = comm - listIndex
+
+            finalSentMsg = ""
+            for i in range(0, (len(decodedMsg) - 1)):
+                finalSentMsg = finalSentMsg + decodedMsg[i]
+
+            finalSentMsg = finalSentMsg + str(listIndex + 1)
+
+            if (listIndex + 1) >= comm:
+                if userIndex != 0:
+                    print(receivedMsg)
+                    br = 0
+                    for i in range(0, len(decodedMsg)):
+                        if decodedMsg[i] == '\n':
+                            br = br + 1
+
+                        if br == 3:
+                            sendIndex = i + 2
+                            finalName, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                            finalIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                            finalPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                            finalPort = int(finalPort)
+                            break
+
+                    clientClientSocket.sendto(finalSentMsg.encode(), (finalIp, finalPort))
+                else:
+                    br = 0
+                    for i in range(0, len(decodedMsg)):
+                        if decodedMsg[i] == '\n':
+                            br = br + 1
+
+                        if br == 3:
+                            sendIndex = i + 2
+                            finalName, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                            finalIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                            finalPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                            finalPort = int(finalPort)
+                            break
+
+                    clientClientSocket.sendto(receivedMsg.encode(), (finalIp, finalPort))
+            else:
+                print(receivedMsg)
+                br = 0
+                for i in range(0, len(decodedMsg)):
+                    if decodedMsg[i] == '\n':
+                        br = br + 1
+
+                    if br == (listIndex + 4):
+                        sendIndex = i + 2
+                        nextName, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                        nextIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                        nextPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                        nextPort = int(nextPort)
+                        break
+
+                clientClientSocket.sendto(finalSentMsg.encode(), (nextIp, nextPort))
         else:
-            br = 0
-            for i in range(0, len(decodedMsg)):
-                if decodedMsg[i] == '\n':
-                    br = br + 1
-
-                if br == (listIndex + 3):
-                    sendIndex = i + 2
-                    nextName, sendIndex = getCommandTab(decodedMsg, sendIndex)
-                    nextIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
-                    nextPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
-                    nextPort = int(nextPort)
-                    break
-
-            clientClientSocket.sendto(finalSentMsg.encode(), (nextIp, nextPort))
-
-
+            print()
 
 
 if len(sys.argv) != 3:
@@ -209,6 +233,7 @@ while True:
         if getResult(message) == 0 and registered == 1:
             print("FAILURE: You have already registed")
         else:
+            print(message)
             index = 0
             temp, index = getCommandWIndex(message, index)
 
