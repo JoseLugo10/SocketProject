@@ -207,7 +207,7 @@ while True:
                         sentMsg = "FAILURE: User does not exist in contact list " + command2
                         break
                     else:
-                        sentMsg = "SUCCESS:\n"
+                        sentMsg = "SUCCESS: \n"
                         sentMsg = sentMsg + "Number of contacts in " + query[i][0] + ": " + str(len(query[i][1])) + " \n"
 
                         for j in range(0, len(query[i][1])):

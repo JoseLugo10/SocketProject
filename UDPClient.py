@@ -47,7 +47,7 @@ def getResult(result):
     return num
 
 
-def p2pApp(clientPortNum):
+def p2pApp(clientPortNum, clientClientSocket):
     clientClientSocket.bind(('', clientPortNum))
 
     while True:
@@ -74,15 +74,15 @@ def p2pApp(clientPortNum):
                 comm = int(comm)
                 break
 
-        br = 0
-        for i in range(0, len(decodedMsg)):
-            if decodedMsg[i] == '\n':
-                br = br + 1
-
-            if br == (3 + comm):
-                listIndex = int(decodedMsg[i + 1])
+        listIndex = int(decodedMsg[len(decodedMsg) - 1])
 
         userIndex = comm - listIndex
+
+        finalSentMsg = ""
+        for i in range(0, (len(decodedMsg) - 1)):
+            finalSentMsg = finalSentMsg + decodedMsg[i]
+
+        finalSentMsg = finalSentMsg + str(userIndex)
 
         if userIndex == 1:
             br = 0
@@ -98,9 +98,22 @@ def p2pApp(clientPortNum):
                     finalPort = int(finalPort)
                     break
 
-            clientClientSocket.sendto(decodedMsg.encode(), (finalIp, finalPort))
+            clientClientSocket.sendto(finalSentMsg.encode(), (finalIp, finalPort))
         else:
-            print("a")
+            br = 0
+            for i in range(0, len(decodedMsg)):
+                if decodedMsg[i] == '\n':
+                    br = br + 1
+
+                if br == (listIndex + 3):
+                    sendIndex = i + 2
+                    nextName, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                    nextIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                    nextPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
+                    nextPort = int(nextPort)
+                    break
+
+            clientClientSocket.sendto(finalSentMsg.encode(), (nextIp, nextPort))
 
 
 
@@ -125,9 +138,9 @@ while True:
 
     if getCommand(message) == "im-start":
         place = 0
-        command1, place = getCommandWIndex(message)
-        command2, place = getCommandWIndex(message)
-        command3, place = getCommandWIndex(message)
+        command1, place = getCommandWIndex(message, place)
+        command2, place = getCommandWIndex(message, place)
+        command3, place = getCommandWIndex(message, place)
 
         clientServerSocket.sendto(message.encode(), (serverName, serverPort))
         modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
@@ -138,7 +151,7 @@ while True:
         else:
             print(message)
             messageIM = input('Message to send to contact list: ')
-            messageIM = messageIM + "\n" + message
+            messageIM = messageIM + " \n" + message
 
             lineBreaks = 0
             num = ""
@@ -152,7 +165,7 @@ while True:
                     num = int(num)
 
                 if lineBreaks == 3:
-                    index = i + 1
+                    index = i + 2
                     sendingName, index = getCommandTab(message, index)
                     sendingIp, index = getCommandTab(message, index)
                     sendingPort, index = getCommandTab(message, index)
@@ -165,7 +178,7 @@ while True:
                     lineBreaks = lineBreaks + 1
 
                 if lineBreaks == num + 1:
-                    index = i + 1
+                    index = i + 2
                     receivingName, index = getCommandTab(message, index)
                     receivingIp, index = getCommandTab(message, index)
                     receivingPort, index = getCommandTab(message, index)
@@ -176,7 +189,9 @@ while True:
             messageIM = messageIM + str(num)
 
             clientClientSocket.sendto(messageIM.encode(), (sendingIp, sendingPort))
+
             receivedMessage, clientAddr = clientClientSocket.recvfrom(2048)
+            receivedMessage = receivedMessage.decode()
             print(receivedMessage)
 
             if clientAddr == receivingIp:
@@ -196,13 +211,13 @@ while True:
         else:
             index = 0
             temp, index = getCommandWIndex(message, index)
-            clientName, index = getCommandWIndex(message, index)
 
+            clientName, index = getCommandWIndex(message, index)
             clientAddress, index = getCommandWIndex(message, index)
             clientPort, index = getCommandWIndex(message, index)
             clientPortNum = int(clientPort)
 
-            p1 = multiprocessing.Process(target=p2pApp, args=(clientPortNum,))
+            p1 = multiprocessing.Process(target=p2pApp, args=(clientPortNum, clientClientSocket,))
             p1.start()
 
     elif getCommand(message) == "exit":
