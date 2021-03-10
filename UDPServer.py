@@ -74,11 +74,74 @@ def startedIM(list, name):
             break
     return started
 
+# This function uses two parameters, cmd and index to separate substrings within a command given to from
+# a client. If called once, it returns a string, and an int. Unlike the previous function, this seperates
+# commands based off of \t and \n instead of ' '.
+def getCommandTab(cmd, index):
+    finalCmd = ""
+    for i in range(index, len(cmd)):
+        if cmd[i] == '\t' or cmd[i] == '\n':
+            break
+        finalCmd = finalCmd + cmd[i]
+        index = index + 1
+    index = index + 1
+    return finalCmd, index
+
 # The program checks to see if the proper amount of inputs have been made to start the server.
 # If there isn't enough inputs, then the program exits.
-if len(sys.argv) != 2:
+if len(sys.argv) < 2 or len(sys.argv) > 3:
     print("FAILURE: Incorrect amount of inputs")
     sys.exit()
+
+if len(sys.argv) == 3:
+    file = open(sys.argv[2], "r")
+    text = file.read()
+    file.close()
+
+    for i in range(0, len(text)):
+        if text[i] == '\n':
+            numUsers = int(text[i - 2])
+            for j in range(0, numUsers):
+                i = i + 1
+                temp, i = getCommandTab(text, i)
+                info1, i = getCommandTab(text, i)
+                info2, i = getCommandTab(text, i)
+                info3, i = getCommandTab(text, i)
+                oldUser = [info1, info2, info3, 0]
+                users.append(oldUser)
+            break
+    breaks = 0
+    for i in range(0, len(text)):
+        if text[i] == '\n':
+            breaks = breaks + 1
+
+        if breaks == (2 + numUsers):
+            numLists = int(text[i - 2])
+            for j in range(0, numLists):
+                listName = ""
+                for k in range(i + 1, len(text)):
+                    if text[k] == ':':
+                        i = k
+                        break
+                    listName = listName + text[k]
+                memberNum = int(text[i + 2])
+                for k in range(i, len(text)):
+                    if text[k] == '\n':
+                        i = k
+                        break
+                contactList.append(listName)
+                newQ = [listName, []]
+                query.append(newQ)
+                for k in range(0, memberNum):
+                    i = i + 1
+                    temp, i = getCommandTab(text, i)
+                    info1, i = getCommandTab(text, i)
+                    info2, i = getCommandTab(text, i)
+                    info3, i = getCommandTab(text, i)
+                    newMember = [info1, info2, info3]
+                    query[j][1].append(newMember)
+                i = i + 1
+            break
 
 # We create a socket based off of the port number that was given through input.
 serverPort = int(sys.argv[1])
@@ -119,6 +182,8 @@ while True:
         # the client.
         if realUser(command2) == 1:
             sentMsg = "FAILURE: This user is already registered"
+        elif len(users) == 7:
+            sentMsg = "FAILURE: The max amount of users has been reached"
         else:
             # command3 and command4 will contain the ip address and port number of the client respectively.
             command3, index = getCommand(decodedMessage, index)
@@ -138,6 +203,8 @@ while True:
         # realContactList() function.
         if realContactList(command2) == 1:
             sentMsg = "FAILURE: Contact list already exists"
+        elif len(contactList) == 3:
+            sentMsg = "FAILURE: The max amount of contact lists has been reached"
         else:
             # The program adds the contact list into the contactList list, and creates a new list with two parameters:
             # the name of the contact list, and a list for all of the members that will join.
@@ -202,7 +269,7 @@ while True:
                                     query[i][1].append(newQueryMember)
                                     sentMsg = "SUCCESS: " + command3 + " has joined the " + command2 + " contact list"
                                     break
-                            
+
     elif command1 == "leave" and spaces == 2:
         # command2 and command3 get the contact list and name of the client respectively.
         command2, index = getCommand(decodedMessage, index)
@@ -352,20 +419,20 @@ while True:
         textFile = open(command2 + ".txt", "w")
 
         # All of the users are written onto the file.
-        textFile.write("The Number of Active Users: " + str(len(users)) + "\n")
+        textFile.write("The Number of Active Users: " + str(len(users)) + " \n")
         for i in range(0, len(users)):
             textFile.write("\t" + users[i][0])
             textFile.write("\t" + users[i][1])
-            textFile.write("\t" + users[i][2] + "\n")
+            textFile.write("\t" + users[i][2] + " \n")
 
         # All of the contact lists and their members are written onto the file.
-        textFile.write("\nThe Number of Contact Lists: " + str(len(query)) + "\n")
+        textFile.write("The Number of Contact Lists: " + str(len(query)) + " \n")
         for i in range(0, len(query)):
-            textFile.write(query[i][0] + ": " + str(len(query[i][1])) + " members\n")
+            textFile.write(query[i][0] + ": " + str(len(query[i][1])) + " members \n")
             for j in range(0, len(query[i][1])):
                 textFile.write("\t" + query[i][1][j][0])
                 textFile.write("\t" + query[i][1][j][1])
-                textFile.write("\t" + query[i][1][j][2] + "\n")
+                textFile.write("\t" + query[i][1][j][2] + " \n")
             textFile.write("\n")
 
         # The file is closed and is now available.
