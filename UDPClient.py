@@ -1,10 +1,30 @@
 from socket import *
 import sys
+import multiprocessing
+import time
 
-def getCommand(cmd, index):
+def getCommand(cmd):
+    finalCmd = ""
+    for i in range(0, len(cmd)):
+        if cmd[i] == ' ':
+            break
+        finalCmd = finalCmd + cmd[i]
+    return finalCmd
+
+def getCommandWIndex(cmd, index):
     finalCmd = ""
     for i in range(index, len(cmd)):
         if cmd[i] == ' ':
+            break
+        finalCmd = finalCmd + cmd[i]
+        index = index + 1
+    index = index + 1
+    return finalCmd, index
+
+def getCommandTab(cmd, index):
+    finalCmd = ""
+    for i in range(index, len(cmd)):
+        if cmd[i] == '\t':
             break
         finalCmd = finalCmd + cmd[i]
         index = index + 1
@@ -15,7 +35,7 @@ def getResult(result):
     num = 0
     identifier = ""
     for i in range(0, len(result)):
-        if result[i] == ' ':
+        if result[i] == ':':
             break
         identifier = identifier + result[i]
 
@@ -23,17 +43,132 @@ def getResult(result):
         num = 1
     return num
 
+def p2pApp():
+    clientClientSocket.bind(('', clientPortNum))
+
+    while True:
+        msg, clientAddress = clientClientSocket.recvfrom(2048)
+        decodedMsg = msg.decode()
+        receivedMsg = ""
+
+        for i in range(0, len(decodedMsg)):
+            if decodedMsg[i] == "\n":
+                break
+            receivedMsg = receivedMsg + decodedMsg[i]
+
+        print(receivedMsg)
+
+
+
 if len(sys.argv) != 3:
     print("FAILURE: Incorrect amount of inputs")
     sys.exit()
 
 serverName = sys.argv[1]
 serverPort = int(sys.argv[2])
-clientSocket = socket(AF_INET, SOCK_DGRAM)
-for i in range(0, 50):
+clientServerSocket = socket(AF_INET, SOCK_DGRAM)
+
+clientName = ""
+clientAddress = ""
+clientPort = ""
+clientPortNum = 0
+clientClientSocket = socket(AF_INET, SOCK_DGRAM)
+registered = 0
+
+receivedBack = 0
+
+while True:
     message = input()
-    clientSocket.sendto(message.encode(), (serverName, serverPort))
-    modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
-    message = modifiedMessage.decode()
-    print(message)
-clientSocket.close()
+
+    if getCommand(message) == "im-start":
+        place = 0
+        command1, place = getCommandWIndex(message)
+        command2, place = getCommandWIndex(message)
+        command3, place = getCommandWIndex(message)
+
+        clientServerSocket.sendto(message.encode(), (serverName, serverPort))
+        modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
+        message = modifiedMessage.decode()
+
+        if getResult(message) == 0:
+            print(message)
+        else:
+            print(message)
+            messageIM = input('Message to send to contact list: ')
+            messageIM = messageIM + message
+
+            lineBreaks = 0
+            num = ""
+            for i in range(0, len(message)):
+                if message[i] == '\n':
+                    lineBreaks = lineBreaks + 1
+
+                if lineBreaks == 1:
+                    for j in range(0, 6):
+                        num, i = getCommandWIndex(message, i)
+                    num = int(num)
+
+                if lineBreaks == 3:
+                    index = i + 1
+                    sendingName, index = getCommandTab(message, index)
+                    sendingIp, index = getCommandTab(message, index)
+                    sendingPort, index = getCommandTab(message, index)
+                    sendingPort = int(sendingPort)
+                    break
+
+            lineBreaks = 0
+            for i in range(0, len(message)):
+                if message[i] == '\n':
+                    lineBreaks = lineBreaks + 1
+
+                if lineBreaks == num + 1:
+                    index = i + 1
+                    receivingName, index = getCommandTab(message, index)
+                    receivingIp, index = getCommandTab(message, index)
+                    receivingPort, index = getCommandTab(message, index)
+                    receivingPort = int(receivingPort)
+                    break
+
+            clientClientSocket.sendto(messageIM.encode(), (sendingIp, sendingPort))
+            receivedMessage, clientAddr = clientClientSocket.recvfrom(2048)
+
+            if clientAddr == receivingIp:
+                completeMsg = "im-complete " + command2 + " " + command3
+                clientServerSocket.sendto(completeMsg.encode(), (serverName, serverPort))
+                modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
+                message = modifiedMessage.decode()
+                print(message)
+
+    elif getCommand(message) == "register":
+        clientServerSocket.sendto(message.encode(), (serverName, serverPort))
+        modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
+        message = modifiedMessage.decode()
+
+        if getResult(message) == 0 and registered == 1:
+            print("FAILURE: You have already registed")
+        else:
+            index = 0
+            temp, index = getCommandWIndex(message, index)
+            clientName, index = getCommandWIndex(message, index)
+
+            clientAddress, index = getCommandWIndex(message, index)
+            clientPort, index = getCommandWIndex(message, index)
+            clientPortNum = int(clientPort)
+    elif getCommand(message) == "exit":
+        clientServerSocket.sendto(message.encode(), (serverName, serverPort))
+        modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
+        message = modifiedMessage.decode()
+
+        if getResult(message) == 1:
+            print(message)
+            break
+        else:
+            print(message)
+    else:
+        clientServerSocket.sendto(message.encode(), (serverName, serverPort))
+        modifiedMessage, serverAddress = clientServerSocket.recvfrom(2048)
+        message = modifiedMessage.decode()
+        print(message)
+
+clientServerSocket.close()
+clientClientSocket.close()

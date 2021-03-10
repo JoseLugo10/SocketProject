@@ -93,7 +93,7 @@ while True:
 
             newUser = [command2, command3, command4, 0]
             users.append(newUser)
-            sentMsg = "SUCCESS: " + command2 + " has been registered"
+            sentMsg = "SUCCESS: " + command2 + " " + command3 + " " + command4 + " has been registered"
 
     elif command1 == "create" and spaces == 1:
         command2, index = getCommand(decodedMessage, index)
@@ -191,7 +191,7 @@ while True:
                         break
 
                 sentMsg = "SUCCESS: " + command2 + " has left the application"
-                
+
     elif command1 == "im-start" and spaces == 2:
         command2, index = getCommand(decodedMessage, index)
         command3, index = getCommand(decodedMessage, index)
@@ -208,20 +208,20 @@ while True:
                         break
                     else:
                         sentMsg = "SUCCESS:\n"
-                        sentMsg = sentMsg + "Number of contacts in " + query[i][0] + ": " + str(len(query[i][1])) + "\n"
+                        sentMsg = sentMsg + "Number of contacts in " + query[i][0] + ": " + str(len(query[i][1])) + " \n"
 
                         for j in range(0, len(query[i][1])):
                             if query[i][1][j][0] == command3:
                                 sentMsg = sentMsg + "\t" + query[i][1][j][0]
                                 sentMsg = sentMsg + "\t" + query[i][1][j][1]
-                                sentMsg = sentMsg + "\t" + query[i][1][j][2] + "\n"
+                                sentMsg = sentMsg + "\t" + query[i][1][j][2] + " \n"
                                 break
 
                         for j in range(0, len(query[i][1])):
                             if query[i][1][j][0] != command3:
                                 sentMsg = sentMsg + "\t" + query[i][1][j][0]
                                 sentMsg = sentMsg + "\t" + query[i][1][j][1]
-                                sentMsg = sentMsg + "\t" + query[i][1][j][2] + "\n"
+                                sentMsg = sentMsg + "\t" + query[i][1][j][2] + " \n"
 
                         for j in range(0, len(query[i][1])):
                             for k in range(0, len(users)):
