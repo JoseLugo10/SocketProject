@@ -1,6 +1,7 @@
 from socket import *
 import sys
 import multiprocessing
+import time
 
 # This function is used to separate substrings within a command given to from the client. It returns the string
 # for the substring.
@@ -71,6 +72,10 @@ def p2pApp(clientPortNum, clientClientSocket):
         # string named receivedMsg is made that will contain it.
         receivedMsg = ""
 
+        # The program counts for how many times the '\n' character has been seen. This is because when the client is
+        # sending the message to the next client, we want to make sure we know when the bottom of the list has been
+        # reached. Throughout this function we will see that the amount of '\n's will determine whether or not the
+        # original sender has been reached.
         br = 0
         for i in range(0, len(decodedMsg)):
             if decodedMsg[i] == '\n':
@@ -83,7 +88,11 @@ def p2pApp(clientPortNum, clientClientSocket):
 
         receivedMsg = receivedMsg + '\n'
 
+        # If the amount of '\n's is more than one, that means that there are still more clients to send the message
+        # and the list of other clients to.
         if br > 1:
+            # The value comm is parsed into an integer from the message so that we can see how many people are in the
+            # contact list.
             br = 0
             for i in range(0, len(decodedMsg)):
                 if decodedMsg[i] == '\n':
@@ -96,16 +105,22 @@ def p2pApp(clientPortNum, clientClientSocket):
                     comm = int(comm)
                     break
 
+            # The value listIndex is the number at the very bottom of the message that was originally sent form the
+            # client who initiated the IM. This number is useful in that it helps us determine how many lines of text
+            # the program needs to skip in order to find the next client that needs the message sent.
             listIndex = int(decodedMsg[len(decodedMsg) - 1])
 
-            userIndex = comm - listIndex
-
+            # The finalSentMsg string will contain the message sent from the original client, the list of other clients,
+            # and a new value for listIndex at the bottom so that the program knows to increment the amount of lines
+            # read to get to the next client.
             finalSentMsg = ""
             for i in range(0, (len(decodedMsg) - 1)):
                 finalSentMsg = finalSentMsg + decodedMsg[i]
 
             finalSentMsg = finalSentMsg + str(listIndex + 1)
 
+            # If the program enters here, that means that we have reached the end of the list of users in the
+            # contact list. Therefore, we must now send the message to the original client.
             if (listIndex + 1) >= comm:
                 print(receivedMsg)
                 br = 0
@@ -114,15 +129,17 @@ def p2pApp(clientPortNum, clientClientSocket):
                         br = br + 1
 
                     if br == 3:
+                        # The information about the original client who sent the message is obtained.
                         sendIndex = i + 2
                         finalName, sendIndex = getCommandTab(decodedMsg, sendIndex)
                         finalIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
                         finalPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
                         finalPort = int(finalPort)
                         break
-
+                # We send just the message (not the list of users) to the original client to receive.
                 clientClientSocket.sendto(receivedMsg.encode(), (finalIp, finalPort))
             else:
+                # If the program goes here, then the message is sent to the next client.
                 print(receivedMsg)
                 br = 0
                 for i in range(0, len(decodedMsg)):
@@ -130,15 +147,18 @@ def p2pApp(clientPortNum, clientClientSocket):
                         br = br + 1
 
                     if br == (listIndex + 4):
+                        # The next client's info is gathered so that it can be sent to them.
                         sendIndex = i + 2
                         nextName, sendIndex = getCommandTab(decodedMsg, sendIndex)
                         nextIp, sendIndex = getCommandTab(decodedMsg, sendIndex)
                         nextPort, sendIndex = getCommandTab(decodedMsg, sendIndex)
                         nextPort = int(nextPort)
                         break
-
+                # We send the message to the next client on the list.
                 clientClientSocket.sendto(finalSentMsg.encode(), (nextIp, nextPort))
         else:
+            # Since the original client has been sent the message, the program will go here as there are no more
+            # clients to send the message to.
             print(receivedMsg)
 
 # The program checks to see if the proper amount of inputs have been made to connect to the server. If not
@@ -219,6 +239,7 @@ while True:
 
             # The messageIM is sent to the first client.
             clientClientSocket.sendto(messageIM.encode(), (sendingIp, sendingPort))
+            time.sleep(1)
 
             # Once the message this client sent is received back from the last client on the list, we automatically
             # send the 'im-complete' command to the server, thus finishing the message.
