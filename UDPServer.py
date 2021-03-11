@@ -93,11 +93,15 @@ if len(sys.argv) < 2 or len(sys.argv) > 3:
     print("FAILURE: Incorrect amount of inputs")
     sys.exit()
 
+# If the user inputs a text file before starting the server, the server will be able to alreadt
+# have all of the users, and the contact lists that they are in
 if len(sys.argv) == 3:
     file = open(sys.argv[2], "r")
     text = file.read()
     file.close()
 
+    # The loop iterates through the entire text of the opened file and parses all of the information about the users
+    # and the contact lists that they are in, and stores them into lists.
     for i in range(0, len(text)):
         if text[i] == '\n':
             numUsers = int(text[i - 2])
@@ -132,15 +136,14 @@ if len(sys.argv) == 3:
                 contactList.append(listName)
                 newQ = [listName, []]
                 query.append(newQ)
+                i = i + 1
                 for k in range(0, memberNum):
-                    i = i + 1
                     temp, i = getCommandTab(text, i)
                     info1, i = getCommandTab(text, i)
                     info2, i = getCommandTab(text, i)
                     info3, i = getCommandTab(text, i)
                     newMember = [info1, info2, info3]
                     query[j][1].append(newMember)
-                i = i + 1
             break
 
 # We create a socket based off of the port number that was given through input.
