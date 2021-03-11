@@ -1,7 +1,6 @@
 from socket import *
 import sys
 import multiprocessing
-import time
 
 # This function is used to separate substrings within a command given to from the client. It returns the string
 # for the substring.
@@ -239,7 +238,6 @@ while True:
 
             # The messageIM is sent to the first client.
             clientClientSocket.sendto(messageIM.encode(), (sendingIp, sendingPort))
-            time.sleep(1)
 
             # Once the message this client sent is received back from the last client on the list, we automatically
             # send the 'im-complete' command to the server, thus finishing the message.
